@@ -1,7 +1,7 @@
 package info.mastera.controller;
 
-import info.mastera.config.RabbitConfiguration;
-import org.springframework.amqp.core.AmqpTemplate;
+import info.mastera.config.Settings;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,19 +14,37 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ReceiverController {
 
     private final AtomicInteger counter = new AtomicInteger(0);
-    private final AmqpTemplate template;
+    private final RabbitTemplate template;
 
     @Autowired
-    public ReceiverController(AmqpTemplate template) {
+    public ReceiverController(RabbitTemplate template) {
         this.template = template;
     }
 
+    /**
+     * Endpoint to process message with only one consumer (one queue only)
+     */
     @RequestMapping("/emit")
     @ResponseBody
-    String queue1() {
-        System.out.println("Emit to " + RabbitConfiguration.SIMPLE_QUEUE_NAME);
-        template.convertAndSend(RabbitConfiguration.SIMPLE_QUEUE_NAME,
+    String simpleQueue() {
+        System.out.println("Emit to " + Settings.SIMPLE_QUEUE_NAME);
+        template.convertAndSend(Settings.SIMPLE_QUEUE_NAME,
                 "Message to queue: " + counter.getAndIncrement() + " at " + LocalDateTime.now());
         return "Emit to queue " + counter.get();
+    }
+
+    /**
+     * Endpoint to process the same message with several types of consumers (one exchange and several queues)
+     */
+    @RequestMapping("/message")
+    @ResponseBody
+    String message() {
+        System.out.println("Received message.");
+        template.convertAndSend(
+                Settings.MESSAGE_EXCHANGE_NAME,
+                Settings.TELEGRAM_QUEUE_NAME,
+                "Message to exchange: " + counter.getAndIncrement() + " at " + LocalDateTime.now()
+        );
+        return "Received message " + counter.get();
     }
 }
