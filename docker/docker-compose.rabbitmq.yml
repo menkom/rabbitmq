@@ -5,7 +5,7 @@ name: lab_rabbitmq
 services:
   rabbitmq:
     image: rabbitmq:3-management-alpine
-    container_name: container-rabbitmq3
+    container_name: lab-rabbitmq3
     hostname: rabbitmq                        # hostname will be used by RabbitMQ to name the server instance.
     restart: on-failure
     environment:
